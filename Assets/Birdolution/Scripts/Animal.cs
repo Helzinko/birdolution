@@ -7,10 +7,11 @@ public class Animal : MonoBehaviour
 {
     private Vector3[] randomDir = { Vector3.right, Vector3.left, Vector3.forward, Vector3.back };
 
-    private float moveDistance;
+    [SerializeField] private float moveDistance;
     private float checkRadius;
 
     private float timeSinceLastClick = 0;
+    public float timeSinceLastTouch = 0;
 
     private float originalSize;
 
@@ -25,10 +26,10 @@ public class Animal : MonoBehaviour
     private int coinsPerSecond = 1;
     private bool canKillEnemy = false;
 
+    public float walkDelayAfterTouch = 5f;
+
     private void Start()
     {
-        moveDistance = transform.localScale.z;
-
         originalSize = transform.localScale.x;
 
         checkRadius = moveDistance / 5;
@@ -44,6 +45,7 @@ public class Animal : MonoBehaviour
     private void Update()
     {
         timeSinceLastClick += Time.deltaTime;
+        timeSinceLastTouch += Time.deltaTime;
     }
 
     IEnumerator Movement()
@@ -53,7 +55,7 @@ public class Animal : MonoBehaviour
             yield return new WaitForSeconds(AnimalManager.instance.timeBetweenMov);
             if (!animalDrag.dragging)
             {
-                if (!CheckDistance())
+                if (!CheckDistance() && timeSinceLastTouch > walkDelayAfterTouch)
                 {
                     bool canContinue = false;
 
@@ -92,7 +94,7 @@ public class Animal : MonoBehaviour
         Gizmos.DrawSphere(checkDir, checkRadius);
     }
 
-    private void OnMouseDown()
+    private void OnMouseUp()
     {
         if (PauseMenu.instance.isPaused) return;
 
@@ -105,6 +107,7 @@ public class Animal : MonoBehaviour
                 BankManager.instance.AddMoney(currentMoneyPerSec);
                 ShowPopupText(currentMoneyPerSec);
                 timeSinceLastClick = 0;
+                timeSinceLastTouch = 0;
                 SoundManager.instance.PlayEffect(GameType.SoundTypes.bird_punch);
             }
         }
